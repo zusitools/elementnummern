@@ -30,21 +30,27 @@ int main(int argc, char** argv) {
   std::string fpn_datei;
   size_t element_nr;
 
-  po::options_description desc("Allowed options");
+  po::options_description desc("Kommandozeilenparameter");
   desc.add_options()
-    ("help", "produce help message")
+    ("help", "Hilfe zur Programmbenutzung anzeigen")
     ("fpn", po::value<std::string>(&fpn_datei), "Zu ladende Fahrplandatei")
     ("element-nr", po::value<size_t>(&element_nr), "Elementnummer in der zusammengesetzten Strecke");
 
   po::positional_options_description p;
-  p.add("fpn", -1);
-  p.add("element-nr", -1);
+  p.add("fpn", 1);
+  p.add("element-nr", 1);
 
   po::variables_map vars;
-  po::store(po::command_line_parser(argc, argv). options(desc).positional(p).run(), vars);
+  try {
+    po::store(po::command_line_parser(argc, argv). options(desc).positional(p).run(), vars);
+  } catch (const boost::program_options::error& e) {
+    boost::nowide::cout << e.what() << "\n";
+    return 1;
+  }
   po::notify(vars);
 
-  if (vars.count("help")) {
+  if (vars.count("help") || !vars.count("fpn") || !vars.count("element-nr")) {
+    boost::nowide::cout << argv[0] << " [FPN-DATEI] [ELEMENTNUMMER]\n\n";
     boost::nowide::cout << desc << "\n";
     return 1;
   }
