@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Fahrplan" Version="A.1" MinVersion="A.1"/>
+<Fahrplan>
+<BefehlsKonfiguration/>
+<Begruessungsdatei/>
+<StrModul>
+<Datei Dateiname="Routes\ModulC.st3"/>
+<p/>
+<phi/>
+</StrModul>
+<StrModul>
+<Datei Dateiname="Routes\ModulA.st3"/>
+<p/>
+<phi/>
+</StrModul>
+<StrModul>
+<Datei Dateiname="Routes\ModulC.st3"/>
+<p/>
+<phi/>
+</StrModul>
+<StrModul>
+<Datei Dateiname="Routes\ModulB.st3"/>
+<p/>
+<phi/>
+</StrModul>
+<UTM/>
+</Fahrplan>
+</Zusi>

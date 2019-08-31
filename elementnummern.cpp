@@ -19,10 +19,9 @@ namespace po = boost::program_options;
 
 struct ModulInfo {
   std::string dateiname;
-  size_t maxElementNr;
-  size_t maxRegisterNrAutomatisch;
-  size_t maxRegisterNrManuell;
-  size_t maxReferenzNr;
+  size_t anzahlStreckenelemente;  // inkl. nicht belegte Nummern (0-indiziert)
+  size_t anzahlRegisterAutomatisch;  // inkl. nicht belegte Nummern (5000-indiziert)
+  size_t anzahlRegisterManuell;  // inkl. nicht belegte Nummern (1-indiziert)
 };
 
 int main(int argc, char** argv) {
@@ -88,19 +87,19 @@ int main(int argc, char** argv) {
 
       if (element->InfoNormRichtung) {
         if (const auto& reg = element->InfoNormRichtung->Reg; reg > 0) {
-          if (reg < 1000) {
-            max_reg_manuell = reg;
+          if (reg < 5000) {
+            max_reg_manuell = std::max(max_reg_manuell, static_cast<size_t>(reg));
           } else {
-            max_reg_automatisch = reg;
+            max_reg_automatisch = std::max(max_reg_automatisch, static_cast<size_t>(reg));
           }
         }
       }
       if (element->InfoGegenRichtung) {
         if (const auto& reg = element->InfoGegenRichtung->Reg; reg > 0) {
-          if (reg < 1000) {
-            max_reg_manuell = reg;
+          if (reg < 5000) {
+            max_reg_manuell = std::max(max_reg_manuell, static_cast<size_t>(reg));
           } else {
-            max_reg_automatisch = reg;
+            max_reg_automatisch = std::max(max_reg_automatisch, static_cast<size_t>(reg));
           }
         }
       }
@@ -109,33 +108,47 @@ int main(int argc, char** argv) {
     modulInfo.emplace_back(ModulInfo {
       modul->Datei.Dateiname,
       st3->Strecke->children_StrElement.size(),
-      max_reg_automatisch,
-      max_reg_manuell,
-      st3->Strecke->children_ReferenzElemente.size()
+      max_reg_automatisch > 0 ? max_reg_automatisch - 5000 + 1 : 0,
+      max_reg_manuell > 0 ? max_reg_manuell : 0
     });
   }
 
-  size_t element_nr_start = 0;
-  size_t reg_manuell_nr_start = 0;
-  size_t reg_automatisch_nr_start = 0;
-  size_t referenz_nr_start = 0;
+  size_t element_nr_start = 1;
+  size_t reg_manuell_nr_start = 1;
+  size_t reg_automatisch_nr_start = 5001;
   for (const auto& modul : modulInfo) {
-    if (element_nr > element_nr_start && element_nr < element_nr_start + modul.maxElementNr) {
-      boost::nowide::cout << "Streckenelement Nr. " << element_nr << ": " << modul.dateiname << ", Element " << (element_nr - element_nr_start - 1) << "\n";
-    }
-    if (element_nr > reg_manuell_nr_start && element_nr < reg_manuell_nr_start + modul.maxElementNr) {
-      boost::nowide::cout << "Register Nr. " << element_nr << ": " << modul.dateiname << ", Element " << (element_nr - reg_manuell_nr_start - 1) << "\n";
-    }
-    if (element_nr > reg_automatisch_nr_start && element_nr < reg_automatisch_nr_start + modul.maxElementNr) {
-      boost::nowide::cout << "Register Nr. " << element_nr << ": " << modul.dateiname << ", Element " << (element_nr - reg_automatisch_nr_start - 1) << "\n";
-    }
-    if (element_nr > referenz_nr_start && element_nr < referenz_nr_start + modul.maxElementNr) {
-      boost::nowide::cout << "Referenzpunkt Nr. " << element_nr << ": " << modul.dateiname << ", Element " << (element_nr - referenz_nr_start - 1) << "\n";
+#ifndef NDEBUG
+    boost::nowide::cerr << "---- " << modul.dateiname << " ----\n";
+#endif
+    if (modul.anzahlStreckenelemente > 0) {
+#ifndef NDEBUG
+      boost::nowide::cerr << " - " << "Streckenelemente: [0, " << (0 + modul.anzahlStreckenelemente - 1) << "] -> [" << element_nr_start << ", " << (element_nr_start + modul.anzahlStreckenelemente - 1) << "]\n";
+#endif
+      if (element_nr >= element_nr_start && element_nr < element_nr_start + modul.anzahlStreckenelemente) {
+        boost::nowide::cout << "Streckenelement Nr. " << element_nr << ": " << modul.dateiname << ", Streckenelement Nr. " << (0 + element_nr - element_nr_start) << "\n";
+      }
+      element_nr_start += modul.anzahlStreckenelemente;
     }
 
-    element_nr_start += modul.maxElementNr;
-    reg_manuell_nr_start += modul.maxRegisterNrManuell;
-    reg_automatisch_nr_start += modul.maxRegisterNrAutomatisch;
-    referenz_nr_start += modul.maxReferenzNr;
+    if (modul.anzahlRegisterManuell > 0) {
+#ifndef NDEBUG
+      boost::nowide::cerr << " - " << "Manuelle Register: [1, " << (1 + modul.anzahlRegisterManuell - 1) << "] -> [" << reg_manuell_nr_start << ", " << (reg_manuell_nr_start + modul.anzahlRegisterManuell - 1) << "]\n";
+#endif
+      if (element_nr >= reg_manuell_nr_start && element_nr < reg_manuell_nr_start + modul.anzahlRegisterManuell) {
+        boost::nowide::cout << "(Manuelles) Register Nr. " << element_nr << ": " << modul.dateiname << ", Register Nr. " << (1 + element_nr - reg_manuell_nr_start) << "\n";
+      }
+      reg_manuell_nr_start += modul.anzahlRegisterManuell;
+    }
+
+    if (modul.anzahlRegisterAutomatisch > 0) {
+#ifndef NDEBUG
+      boost::nowide::cerr << " - " << "Automatische Register: [5000, " << (5000 + modul.anzahlRegisterAutomatisch - 1) << "] -> [" << reg_automatisch_nr_start << ", " << (reg_automatisch_nr_start + modul.anzahlRegisterAutomatisch - 1) << "]\n";
+#endif
+      if (element_nr >= reg_automatisch_nr_start && element_nr < reg_automatisch_nr_start + modul.anzahlRegisterAutomatisch) {
+        boost::nowide::cout << "(Automatisches) Register Nr. " << element_nr << ": " << modul.dateiname << ", Register Nr. " << (5000 + element_nr - reg_automatisch_nr_start) << "\n";
+      }
+
+      reg_automatisch_nr_start += modul.anzahlRegisterAutomatisch;
+    }
   }
 }
