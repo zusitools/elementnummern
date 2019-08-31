@@ -62,12 +62,13 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
+  const auto fpn_datei_zusi_pfad = zusixml::ZusiPfad::vonOsPfad(fpn_datei);
   std::vector<ModulInfo> modulInfo;
   for (const auto& modul : fpn->children_StrModul) {
     if (!modul) {
       continue;
     }
-    const auto& st3 = zusixml::parseFile(zusixml::zusiPfadZuOsPfad(modul->Datei.Dateiname, fpn_datei));
+    const auto& st3 = zusixml::parseFile(zusixml::ZusiPfad::vonZusiPfad(modul->Datei.Dateiname, fpn_datei_zusi_pfad).alsOsPfad());
     if (!st3 || !st3->Strecke) {
       continue;
     }
