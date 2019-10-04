@@ -4,7 +4,15 @@ project (elementnummern)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(parser)
-generate_zusi_parser(zusi_parser ${CMAKE_CURRENT_BINARY_DIR}/zusi_parser)
+generate_zusi_parser(zusi_parser ${CMAKE_CURRENT_BINARY_DIR}/zusi_parser
+  WHITELIST
+    Zusi::Strecke::StrElement
+    StrElement::InfoNormRichtung
+    StrElement::InfoGegenRichtung
+    StreckenelementRichtungsInfo::Reg
+    Zusi::Fahrplan::StrModul::Datei
+    Dateiverknuepfung::Dateiname
+  IGNORE_UNKNOWN)
 
 add_executable(elementnummern elementnummern.cpp nowide/src/iostream.cpp)
 
