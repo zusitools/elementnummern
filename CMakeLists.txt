@@ -18,8 +18,8 @@ add_executable(elementnummern elementnummern.cpp nowide/src/iostream.cpp)
 
 target_link_libraries(elementnummern PRIVATE zusi_parser)
 
-find_package(Boost COMPONENTS filesystem graph program_options REQUIRED)
-target_include_directories(elementnummern PRIVATE ${Boost_INCLUDE_DIRS} nowide/include)
-target_link_libraries(elementnummern PRIVATE ${Boost_LIBRARIES})
+find_package(Boost COMPONENTS program_options REQUIRED)
+target_include_directories(elementnummern PRIVATE nowide/include)
+target_link_libraries(elementnummern PRIVATE Boost::program_options)
 
 install(TARGETS elementnummern RUNTIME DESTINATION bin)
